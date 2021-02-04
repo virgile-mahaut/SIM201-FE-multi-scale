@@ -1,17 +1,16 @@
-#ifndef __projet_H__
-#define __projet_H__
+#ifndef __MAILLAGE_H__
+#define __MAILLAGE_H__
 #include <iostream>
 #include <vector>
 #include <list>
 using namespace std;
 
 class Point{
- private:
- 	double x, y;
  public:
+ 	double x, y, u; // u = u(x,y) pour la solution u
     int reference;
- 	Point(double a=0, double b=0, int ref=0):x(a),y(b),reference(ref){}
- 	Point(const Point& P):x(P.x),y(P.y){}
+ 	Point(double a=0, double b=0, int c=0, int ref=0):x(a),y(b),u(c),reference(ref){}
+ 	Point(const Point& P):x(P.x),y(P.y),u(P.u){}
  	Point& tf_affine(const vector<double>& A, const vector<double>& t);
     bool operator ==(const Point& P){return ((P.x==x)&&(P.y==y));}
     bool operator !=(const Point& P){return !((*this)==P);}
@@ -47,7 +46,8 @@ class Maillage{
 	list<Triangle> triangles;
 	void lecture_msh();
 	Maillage(){lecture_msh();}
-    void affiche();
+    void output() const;
+    void affiche() const;
 };
 
 #endif
