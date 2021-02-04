@@ -13,47 +13,51 @@ void stop_vect(const char * msg)
 // constructeurs-destructeurs
 vecteur::vecteur(int d, double v0) //dim et val constante
 {
-  init(d);
-  for(int i=0;i<dim_;i++) val_[i]=v0;
+  dim_ = d;
+  val_.resize(d);
+  vector<double>::iterator it;
+  it = val_.begin();
+  for(;it != val_.end();it++) *it=v0;
 }
 
 vecteur::vecteur(const vecteur & v) //constructeur par copie
 {
-  init(v.dim_);
-  for(int i=0;i<dim_;i++) val_[i]=v[i];
+  dim_ = v.dim_;
+  val_.resize(v.dim());
+
+  vector<double>::iterator it_elem_courant;
+  it_elem_courant = val_.begin();
+  vector<double>:: const_iterator it_v;
+  it_v = v.val_.begin();
+
+  
+  for(;it_elem_courant != val_.end();it_elem_courant++){
+    *it_elem_courant= *it_v ;
+    it_v++;
+  }
 }
-
-vecteur::~vecteur() {clear();}
-
-// outils de construction et de destruction
-void vecteur::init(int d) //initialisation avec allocation dynamique
-{
-  if(d<=0) stop_vect("init() : dimension <=0");
-  dim_=d;
-  val_ = new double[d];
-}
-
-void vecteur::clear()    //désallocation
-{
-    if(val_!=0) delete [] val_;
-    dim_=0;
-}
-
 //Surcharge d'opérateur
 
 vecteur& vecteur :: operator=(const vecteur& v){
   if (dim_ != v.dim_){
     stop_vect("ERREUR DE DIMENSION");
   }
-  for(int i=0; i<dim_; i++){
-    val_[i] = v.val_[i];}
+  vector<double>::iterator it_elem_courant;
+  it_elem_courant = val_.begin();
+  vector<double>:: const_iterator it_v;
+  it_v = v.val_.begin();
+
+  for(;it_elem_courant != val_.end(); it_elem_courant++){
+    *it_elem_courant = *it_v;
+    it_v++;}
+
   return *this;
 }
 
 vecteur& vecteur::operator=(double x){
-  for(int i=0; i<dim_; i++){
-    val_[i] = x;
-  }
+  vector<double>::iterator it;
+  it = val_.begin();
+  for(;it != val_.end();it++) *it=x;
   return *this;
 }
 
@@ -64,7 +68,7 @@ double& vecteur :: operator[](int i){
   return val_[i];
 }
 
-double& vecteur :: operator[](int i) const{
+double vecteur :: operator[](int i) const{ //enlever le & après double, ca a ptet tout niqué
   if (i>=dim_ || i<0){
     stop_vect("INDICE INCORRECT");
   }
@@ -78,7 +82,7 @@ double& vecteur :: operator()(int i){
   return val_[i-1];
 }
 
-double& vecteur :: operator()(int i) const{
+double vecteur :: operator()(int i) const{ //enlever le & après double, ca a ptet tout niqué
   if (i>dim_ || i<=0){
     stop_vect("INDICE INCORRECT");
   }
@@ -101,9 +105,15 @@ vecteur& vecteur :: operator+=(const vecteur& v){
     stop_vect("ERREUR DE DIMENSION : ON NE PEUT PAS SOMMER DES VECTEURS  DE TAILLES DIFFERENTES");
   }
 
-  for(int i=0; i<dim_; i++){
-    val_[i] = val_[i] + v[i];
-  }
+  vector<double>::iterator it_elem_courant;
+  it_elem_courant = val_.begin();
+  vector<double>:: const_iterator it_v;
+  it_v = v.val_.begin();
+
+  for(;it_elem_courant != val_.end(); it_elem_courant++){
+    *it_elem_courant = *it_elem_courant + *it_v;
+    it_v++;}
+
   return *this;
 }
 
@@ -112,23 +122,34 @@ vecteur& vecteur :: operator-=(const vecteur& v){
     stop_vect("ERREUR DE DIMENSION : ON NE PEUT PAS SOUSTRAIRE DES VECTEURS  DE TAILLES DIFFERENTES");
   }
 
-  for(int i=0; i<dim_; i++){
-    val_[i] = val_[i] - v[i];
-  }
+  vector<double>::iterator it_elem_courant;
+  it_elem_courant = val_.begin();
+  vector<double>:: const_iterator it_v;
+  it_v = v.val_.begin();
+
+  for(;it_elem_courant != val_.end(); it_elem_courant++){
+    *it_elem_courant = *it_elem_courant - *it_v;
+    it_v++;}
   return *this;
 }
 
 vecteur& vecteur :: operator+=(const double& x){
-  for(int i=0; i<dim_; i++){
-    val_[i] = val_[i] + x;
-  }
+  vector<double>::iterator it_elem_courant;
+  it_elem_courant = val_.begin();
+
+  for(;it_elem_courant != val_.end(); it_elem_courant++){
+    *it_elem_courant = *it_elem_courant + x;
+    }
   return *this;
 }
 
 vecteur& vecteur :: operator-=(const double& x){
-  for(int i=0; i<dim_; i++){
-    val_[i] = val_[i] - x;
-  }
+  vector<double>::iterator it_elem_courant;
+  it_elem_courant = val_.begin();
+
+  for(;it_elem_courant != val_.end(); it_elem_courant++){
+    *it_elem_courant = *it_elem_courant - x;
+    }
   return *this;
 }
 
@@ -141,32 +162,63 @@ vecteur operator+(const vecteur& v1, const vecteur& v2){
     stop_vect("ERREUR DE DIMENSION : ON NE PEUT PAS SOMMER DES VECTEURS  DE TAILLES DIFFERENTES");
   } 
   vecteur resultat(v1.dim());
-  for(int i=0; i<v1.dim(); i++){
-    resultat[i] = v1[i] + v2[i];
+
+  vector<double> :: iterator it;
+  it = resultat.val_.begin();
+  vector<double> :: const_iterator it1;
+  it1 = v1.val_.begin();
+  vector<double> :: const_iterator it2;
+  it2 = v2.val_.begin();
+
+  for(; it != resultat.val_.end(); it++){
+    *it = *it1 + *it2;
+    it2++;
+    it1++;
   }
   return resultat;
 }
 
 vecteur operator+(const vecteur& v, const double& x){
   vecteur resultat(v.dim());
-  for(int i=0; i<v.dim(); i++){
-    resultat[i] = v[i] + x;
+
+  vector<double> :: const_iterator itv;
+  itv = v.val_.begin();
+  vector<double> :: iterator itres;
+  itres = resultat.val_.begin();
+  for(;itres != resultat.val_.end(); itres++){
+    *itres = *itv + x;
+    itv++;
   }
+
   return resultat;
 }
 
 vecteur operator+(const double& x, const vecteur& v){
   vecteur resultat(v.dim());
-  for(int i=0; i<v.dim(); i++){
-    resultat[i] = v[i] + x;
+
+  vector<double> :: const_iterator itv;
+  itv = v.val_.begin();
+  vector<double> :: iterator itres;
+  itres = resultat.val_.begin();
+  for(;itres != resultat.val_.end(); itres++){
+    *itres = *itv + x;
+    itv++;
   }
+
   return resultat;
 }
 
 vecteur operator-(const vecteur& v){
   vecteur resultat(v.dim());
-  for (int i=0; i<v.dim(); i++){
-    resultat[i] = -v[i];
+
+  vector<double> :: iterator itres;
+  itres = resultat.val_.begin();
+  vector<double> :: const_iterator itv;
+  itv = v.val_.begin();
+
+  for (; itres != resultat.val_.end(); itres++){
+    *itres = -*itv;
+    itv++;
   }
   return resultat;
 }
@@ -177,32 +229,57 @@ vecteur operator-(const vecteur& v1, const vecteur& v2){
     stop_vect("ERREUR DE DIMENSION : ON NE PEUT PAS SOUSTRAIRE DES VECTEURS  DE TAILLES DIFFERENTES");
   } 
   vecteur resultat(v1.dim());
-  for(int i=0; i<v1.dim(); i++){
-    resultat[i] = v1[i] - v2[i];
+
+  vector<double> :: iterator it;
+  it = resultat.val_.begin();
+  vector<double> :: const_iterator it1;
+  it1 = v1.val_.begin();
+  vector<double> :: const_iterator it2;
+  it2 = v2.val_.begin();
+
+  for(; it != resultat.val_.end(); it++){
+    *it = *it1 - *it2;
+    it2++;
+    it1++;
   }
   return resultat;
 }
 
 vecteur operator-(const vecteur& v, const double& x){
   vecteur resultat(v.dim());
-  for(int i=0; i<v.dim(); i++){
-    resultat[i] = v[i] - x;
+
+  vector<double> :: const_iterator itv;
+  itv = v.val_.begin();
+  vector<double> :: iterator itres;
+  itres = resultat.val_.begin();
+  for(;itres != resultat.val_.end(); itres++){
+    *itres = *itv + x;
+    itv++;
   }
   return resultat;
 }
 
 vecteur operator-(const double& x, const vecteur& v){
   vecteur resultat(v.dim());
-  for(int i=0; i<v.dim(); i++){
-    resultat[i] = v[i] - x;
+  
+  vector<double> :: const_iterator itv;
+  itv = v.val_.begin();
+  vector<double> :: iterator itres;
+  itres = resultat.val_.begin();
+  for(;itres != resultat.val_.end(); itres++){
+    *itres = *itv + x;
+    itv++;
   }
   return resultat;
 }
 
 vecteur& vecteur:: operator*=(const double& x){
-  for(int i=0; i<dim_; i++){
-    val_[i] = val_[i] * x;
-  }
+  vector<double>::iterator it_elem_courant;
+  it_elem_courant = val_.begin();
+
+  for(;it_elem_courant != val_.end(); it_elem_courant++){
+    *it_elem_courant = *it_elem_courant * x;
+    }
   return *this;
 
 }
@@ -211,9 +288,12 @@ vecteur& vecteur:: operator/=(const double& x){
   if (x==0){
     stop_vect("ERREUR: DIVISION PAR 0");
   }
-  for(int i=0; i<dim_; i++){
-    val_[i] = val_[i] / x;
-  }
+  vector<double>::iterator it_elem_courant;
+  it_elem_courant = val_.begin();
+
+  for(;it_elem_courant != val_.end(); it_elem_courant++){
+    *it_elem_courant = *it_elem_courant / x;
+    }
   return *this;
 
 }
@@ -221,16 +301,28 @@ vecteur& vecteur:: operator/=(const double& x){
 
 vecteur operator*(const vecteur& v, const double& x){
   vecteur resultat(v.dim());
-  for(int i=0; i<v.dim(); i++){
-    resultat[i] = v[i] * x;
+
+  vector<double> :: const_iterator itv;
+  itv = v.val_.begin();
+  vector<double> :: iterator itres;
+  itres = resultat.val_.begin();
+  for(;itres != resultat.val_.end(); itres++){
+    *itres = *itv * x;
+    itv++;
   }
+
   return resultat;
 }
 
 vecteur operator*(const double& x, const vecteur& v){
   vecteur resultat(v.dim());
-  for(int i=0; i<v.dim(); i++){
-    resultat[i] = v[i] * x;
+  vector<double> :: const_iterator itv;
+  itv = v.val_.begin();
+  vector<double> :: iterator itres;
+  itres = resultat.val_.begin();
+  for(;itres != resultat.val_.end(); itres++){
+    *itres = *itv * x;
+    itv++;
   }
   return resultat;
 }
@@ -240,8 +332,13 @@ vecteur operator/(const vecteur& v, const double& x){
     stop_vect("ERREUR: DIVISION PAR 0");
   }
   vecteur resultat(v.dim());
-  for(int i=0; i<v.dim(); i++){
-    resultat[i] = v[i] / x;
+  vector<double> :: const_iterator itv;
+  itv = v.val_.begin();
+  vector<double> :: iterator itres;
+  itres = resultat.val_.begin();
+  for(;itres != resultat.val_.end(); itres++){
+    *itres = *itv / x;
+    itv++;
   }
   return resultat;
 }
@@ -252,8 +349,12 @@ double operator|(const vecteur& v1, const vecteur& v2){
     stop_vect("ERREUR DE DIMENSION : TAILLES INCOMPATIBLES POUR LE PRODUIT SCALAIRE");
   }
     double PS = 0;
-    for(int i=0; i<v1.dim(); i++){
-        PS = PS + v1[i]*v2[i];
+    vector<double> :: const_iterator itv1;
+    itv1 = v1.val_.begin();
+    vector<double> :: const_iterator itv2;
+    itv2 = v2.val_.begin();
+    for(;itv1 != v1.val_.end(); itv1++){
+    PS = PS + (*itv1) * (*itv2);
   }
   return PS;
 
@@ -262,12 +363,21 @@ double operator|(const vecteur& v1, const vecteur& v2){
 vecteur operator,(const vecteur& v1, const vecteur& v2){
   int new_dim = v1.dim() + v2.dim();
   vecteur Resultat(new_dim);
-  int i;
-  for (i=0; i<v1.dim(); i++){
-    Resultat[i] = v1[i];
+
+  vector<double> :: iterator it;
+  it = Resultat.val_.begin();
+  vector<double> :: const_iterator it1;
+  it1 = v1.val_.begin();
+  vector<double> :: const_iterator it2;
+  it2 = v2.val_.begin();
+
+  for(; it1 != v1.val_.end(); it1++){
+    *it = *it1;
+    it++;
   }
-  for (i=0; i<v1.dim(); i++){
-    Resultat[v1.dim() + i] = v2[i];
+  for(; it2 != v2.val_.end(); it2++){
+    *it = *it2;
+    it++;
   }
   return Resultat;
 
@@ -277,9 +387,14 @@ bool operator==(const vecteur& v1, const vecteur& v2){
   if (v1.dim() != v2.dim()){
     return false;
   } 
-  for(int i=0; i<v1.dim(); i++){
-    if (v1[i] != v2[i]){
+  vector<double> :: const_iterator it1;
+  it1 = v1.val_.begin();
+  vector<double> :: const_iterator it2;
+  it2 = v2.val_.begin();
+  for(; it1 != v1.val_.end(); it1++){
+    if (*it1 != *it2){
       return false;}
+    it2++;
   } 
   return true;
   

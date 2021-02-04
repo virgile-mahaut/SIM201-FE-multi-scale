@@ -27,6 +27,8 @@ matrice_pleine :: matrice_pleine(int dl, int dc, double x){
 }
 
 matrice_pleine :: matrice_pleine(const matrice_pleine& M){
+  dim_l = M.dim_l;
+  dim_c = M.dim_c;
   val_.resize(M.diml() * M.dimc()); 
   vector<double>::iterator it_elem_courant; 
   it_elem_courant = val_.begin(); 
