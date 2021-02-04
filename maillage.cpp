@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <list>
-#include "projet.hpp"
+#include "maillage.hpp"
 using namespace std;
 
 //================================================================
@@ -65,7 +65,7 @@ Point operator /(const Point& p, double d){
 //===============================================================
 
 Triangle::Triangle(int a, int b, int c,int ref){
-	resize(4);
+	resize(3);
 	(*this)[0]=a;(*this)[1]=b;(*this)[2]=c;
 	reference=ref;
 }
@@ -177,15 +177,41 @@ void Maillage::lecture_msh(){
 	}
 }
 
-void Maillage::affiche(){
+void Maillage::output() const{
+	string const nomFichier("output.txt");
+	ofstream Flux(nomFichier.c_str());
+    if(Flux)    
+    {
+		Flux<<"sommets"<<endl;
+		Flux<<sommets.size()<<endl;
+		vector<Point>::const_iterator its=sommets.begin();
+		int i=1;
+		for (;its!=sommets.end();its++,i++){
+			Flux<<i<<" "<<(*its).x<<" "<<(*its).y<<" "<<(*its).u<<endl;
+		}
+		Flux<<"triangles"<<endl;
+		Flux<<triangles.size()<<endl;
+		list<Triangle>::const_iterator itt=triangles.begin();
+		i=1;
+		for (;itt!=triangles.end();itt++,i++){
+			Flux<<i<<" "<<(*itt)[0]<<" "<<(*itt)[1]<<" "<<(*itt)[2]<<endl;
+		}
+    }
+    else
+    {
+        cout << "ERREUR: Impossible d'ouvrir le fichier." << endl;
+    }
+}
+
+void Maillage::affiche() const{
 	cout<<"sommets : ("<<sommets.size()<<" sommets)\n";
-	vector<Point>::iterator its=sommets.begin();
+	vector<Point>::const_iterator its=sommets.begin();
 	int i=1;
 	for (;its!=sommets.end();its++,i++){
 		cout<<"sommet "<<i<<" : "<<(*its)<<" Reference : "<<(*its).reference<<endl;
 	}
 	cout<<"triangles : ("<<triangles.size()<<" triangles)\n";
-	list<Triangle>::iterator itt=triangles.begin();
+	list<Triangle>::const_iterator itt=triangles.begin();
 	i=1;
 	for (;itt!=triangles.end();itt++,i++){
 		cout<<"Triangle "<<i<<" : "<<(*itt)<<" Reference : "<<(*itt).reference<<endl;
