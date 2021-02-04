@@ -1,13 +1,9 @@
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <list>
-#include <string>
-#include "projet.hpp"
-using namespace std;
+#include "maillage.hpp"
 
-int main(){
-	Maillage M;
-	M.affiche();
-	return 0;
+int main()
+{
+   Maillage M;
+   M.affiche();
+   M.output();
+   return 0;
 }
