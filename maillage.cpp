@@ -142,7 +142,6 @@ void Maillage::lecture_msh(){
 		} while (ligne.compare("$Elements")!=0);
 		getline(maillage,ligne);
 		uint Nbtri = stoi(ligne);
-		list<Triangle>::iterator itt = triangles.begin();
 		getline(maillage,ligne);
 		vector<int> tmp = stovi(ligne);
 		int test = tmp[1];
@@ -176,6 +175,26 @@ void Maillage::lecture_msh(){
 		triangles.push_back(Triangle(*(tmp.end()-3),*(tmp.end()-2),*(tmp.end()-1),*(tmp.end()-4)));
 	}
 }
+
+
+void Maillage::profil(){
+	// P_(i) = min{j, 1<=j<i, A_ij not equal 0}
+	P_.resize(sommets.size());
+	for (int i=0; i< sommets.size(); i++){
+		P_[i]=i+1;
+	}
+	list<Triangle>::iterator itt=triangles.begin();
+	for (; itt!=triangles.end();itt++){
+		for (int i=0; i<3; i++){
+			int ni=(*itt)[i];
+			for (int j=0; j<3; j++){
+				int nj=(*itt)[j];
+				P_[ni-1]=min(P_[ni-1],nj);
+			}
+		}
+	}
+}
+
 
 void Maillage::output() const{
 	string const nomFichier("output.txt");
@@ -215,5 +234,11 @@ void Maillage::affiche() const{
 	i=1;
 	for (;itt!=triangles.end();itt++,i++){
 		cout<<"Triangle "<<i<<" : "<<(*itt)<<" Reference : "<<(*itt).reference<<endl;
+	}
+	cout<<"Profil"<<endl;
+	vector<int>::const_iterator itp = P_.begin();
+	i=1;
+	for(;itp!=P_.end();itp++,i++){
+		cout<<"P_("<<i<<") = "<<(*itp)<<endl;
 	}
 }
