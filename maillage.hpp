@@ -44,8 +44,10 @@ class Maillage{
  public:
 	vector<Point> sommets;
 	list<Triangle> triangles;
+    vector<int> P_;
 	void lecture_msh();
-	Maillage(){lecture_msh();}
+    void profil();
+	Maillage(){lecture_msh(); profil();}
     void output() const;
     void affiche() const;
 };
