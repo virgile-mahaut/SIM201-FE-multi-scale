@@ -1,5 +1,12 @@
 #include "maillage.hpp"
 #include "EF_principal.hpp"
+#include <iostream>
+#include "vecteur.hpp"
+#include "matrice.hpp"
+#include <time.h>
+#include <stdlib.h>
+#include <math.h>
+#include <random>
 
 int main()
 {
