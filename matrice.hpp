@@ -75,7 +75,8 @@ friend matrice_profil operator * (const float& x, matrice_profil&A);
 matrice_profil& Id(); //transforme une matrice carre en l'identite
 };
 
-
+//matrice_profil cholesky(matrice_profil A);
+//vecteur resol(matrice_profil A, vecteur y);
 
 
 #endif
