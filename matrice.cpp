@@ -354,6 +354,52 @@ matrice_profil& matrice_profil :: Id(){
     return *this;
 }
 
+/*matrice_profil cholesky(matrice_profil A){
+  matrice_profil L;
+  for (int p=1; p<=A.diml(); p++){
+    double valeur =A(p,p);
+    for (int k=A.profil(p); k<p; k++){
+      valeur -= L(p,k)*L(p,k);
+    }
+    L(p,p)=sqrt(val);
+    for (int j=p+1; j<=A.diml(); j++){
+      valeur = A(p,j);
+      int m = max(A.profil(p),A.profil(j));
+      for (int k=m; k<j;k++){
+        valeur -= L(p,k)*L(j,k);
+      }
+      L(p,j)=valeur/L(j,j);
+    }
+  }
+  return L;
+}
+
+vecteur resol(matrice_profil A, vecteur y){
+  // résout le problème Ax=y en utilisant la factorisation de Cholesky A =LLt
+  // où A est symétrique définie positive et stockée en profil
+  // On résout d'abord Lz=y
+  vecteur x(L.dim()); vecteur z(l.dim());
+  matrice_profil L = cholesky(A);
+  int i=1; int j;
+  double valeur;
+  for (; i<=L.dim(); i++){
+    valeur = y(i)
+    for (j=1; j<i; j++){
+      valeur -= L(i,j)*z(j);
+    }
+    z(i)=valeur/L(i,i);
+  }
+  // puis on résout Ltx=z
+  for (i=L.dim(); i=1; i--){
+    valeur=z(i);
+    for (j=L.dim();j>i; j--){
+      valeur -= L(j,i)*x(j);
+    }
+    x(i)=valeur/L(i,i);
+  }
+  return x;
+} */
+
 /*matrice_profil operator * (matrice_profil&A, const float& x){
   matrice_pleine r(A.diml(),A.dimc());
   matrice_profil R(r);
