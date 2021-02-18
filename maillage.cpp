@@ -196,6 +196,29 @@ void Maillage::profil(){
 }
 
 
+/*void Maillage::assemblage(){
+    matrice_profil MM(M.sommets.size(),M.sommets.size()), 
+                   KK(M.sommets.size(),M.sommets.size()),
+                   Kel, Mel;
+    list<Triangle>::const_iterator itt = M.triangles.begin();
+    for (; itt!=M.triangles.end(); itt++){
+        // calcul des matrices élémentaires
+        Kel = matK_elem(M.sommets);
+        Mel = matM_elem(K.sommets);
+        int i,j,I,J;
+        // assemblage des matrices globales
+        for (i=1; i<=3; i++){
+            I=(*itt)[i-1];
+            for (j=1; j<=i; j++){
+                J = (*itt)[j-1];
+                MM(I,J)+=Mel(i,j);
+                KK(I,J)+=Kel(i,j);
+            }
+        }
+    }
+}*/
+
+
 void Maillage::output() const{
 	string const nomFichier("output.txt");
 	ofstream Flux(nomFichier.c_str());
