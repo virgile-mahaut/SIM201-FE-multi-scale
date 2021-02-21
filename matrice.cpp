@@ -1,7 +1,9 @@
 #include "matrice.hpp"
+#include "vecteur.hpp"
 #include <cmath>
 #include <cstdlib>
 #include <vector>
+
 
 ///////////////////////////////////////////////// FONCTION GENERALE
 
@@ -81,7 +83,7 @@ for (int i=0;i<M.diml(); i++){
 return out;
 }
 
-matrice_pleine operator + (matrice_pleine&A, matrice_pleine& B){
+matrice_pleine operator + (const matrice_pleine&A, const matrice_pleine& B){
   if (A.diml() != B.diml() || A.dimc() != B.dimc()){
     stop_mat("TAILLES DES MATRICES INCOMPATIBLES POUR L'ADDITION");
   }
@@ -94,7 +96,7 @@ matrice_pleine operator + (matrice_pleine&A, matrice_pleine& B){
   return R;
 }
 
-matrice_pleine operator - (matrice_pleine&A, matrice_pleine& B){
+matrice_pleine operator - (const matrice_pleine&A, const matrice_pleine& B){
   if (A.diml() != B.diml() || A.dimc() != B.dimc()){
     stop_mat("TAILLES DES MATRICES INCOMPATIBLES POUR L'ADDITION");
   }
@@ -107,17 +109,7 @@ matrice_pleine operator - (matrice_pleine&A, matrice_pleine& B){
   return R;
 }
 
-matrice_pleine operator * (matrice_pleine&A, const float& x){
-  matrice_pleine R(A.diml(), A.dimc());
-  for (int i=1; i<A.diml()+1; i++){
-    for (int j=1; j<A.dimc()+1; j++){
-      R(i,j) = x  * A(i,j);
-    }  
-  }
-  return R;
-  
-}
-matrice_pleine operator * (const float& x, matrice_pleine&A){
+matrice_pleine operator * (const matrice_pleine&A, const float& x){
   matrice_pleine R(A.diml(), A.dimc());
   for (int i=1; i<A.diml()+1; i++){
     for (int j=1; j<A.dimc()+1; j++){
@@ -128,132 +120,225 @@ matrice_pleine operator * (const float& x, matrice_pleine&A){
   
 }
 
-///////////////////////////////////////////////// FONCTION DE LA CLASSE MATRICE PROFIL
+matrice_pleine operator * (const float& x, const matrice_pleine&A){
+  matrice_pleine R(A.diml(), A.dimc());
+  for (int i=1; i<A.diml()+1; i++){
+    for (int j=1; j<A.dimc()+1; j++){
+      R(i,j) = x  * A(i,j);
+    }  
+  }
+  return R;
+  
+}
 
-matrice_profil :: matrice_profil(const matrice_pleine& M){
+vecteur operator * (const matrice_pleine& A, const vecteur& v){
+  if (v.dim() != A.dimc()){
+    stop_mat("VECTEUR ET MATRICE INCOMPATIBLES POUR LE PRODUIT");
+  }
 
-  dim_l = M.diml();
-  dim_c = M.dimc();
-  row.resize(0);
-  column.resize(0);
-  val_.resize(0);
-
-  int i;
-  int j;
-  for(i=0; i<dim_l; i++){
-    for(j=0; j<dim_c; j++){
-      
-      if ( M(i+1,j+1) != 0){
-        row.push_back(j+1);
-        column.push_back(i+1);
-        val_.push_back(M(i+1,j+1));
-      }
+  vecteur produit(A.diml());
+  for(int i=1; i<A.diml()+1; i++){
+    for(int k=1; k<v.dim()+1;k++){
+      produit(i) += v(k)*A(i,k);
     }
   }
-  nbr_val = val_.size();
+  return produit;
 }
 
-matrice_profil :: matrice_profil(int dl, int dc){
+///////////////////////////////////////////////// FONCTION DE LA CLASSE MATRICE PROFIL SYMETRQUE
+
+
+matrice_profil_sym :: matrice_profil_sym(int dl, int dc){
 
   dim_l = dl;
   dim_c = dc;
-  row.resize(0);
-  column.resize(0);
+  profil.resize(0);
   val_.resize(0);
+  nbr_coef.resize(0);
   nbr_val = 0;
+
+  nbr_coef.push_back(0); //le premier terme vaut 0 par convention et sert a avoir des formule sans problèmes d'indices
+  for(int i=0; i<dl; i++){
+    val_.push_back(0);
+    nbr_coef.push_back(0);
+    profil.push_back(i+1);
+  }
 }
 
-matrice_profil :: matrice_profil(const matrice_profil& M){
-  dim_l = M.diml();
-  dim_c = M.dimc();
-  row.resize(0);
-  column.resize(0);
+matrice_profil_sym :: matrice_profil_sym(const matrice_profil_sym& M){
+    dim_l = M.diml();
+    dim_c = M.dimc();
+    profil.resize(0);
+    val_.resize(0);
+    nbr_coef.resize(0);
+    nbr_val = M.nbr_val;
+    
+    for(int i=0; i< (int) M.val_.size(); i++){
+        val_.push_back(M.val_[i]);
+    }
+    for(int i=0; i< (int) M.profil.size(); i++){
+        profil.push_back(M.profil[i]);
+    }
+    for(int i=0; i< (int) M.nbr_coef.size(); i++){
+        nbr_coef.push_back(M.nbr_coef[i]);
+    }
+    
+}
+
+matrice_profil_sym :: matrice_profil_sym(int dl, int dc, const vecteur& v){
+  dim_l = dl;
+  dim_c = dc;
+  profil.resize(0);
+
+  nbr_val = 0;
+  for (int i=1; i<v.dim()+1; i++){
+    nbr_val += i-v(i)+1;
+  }
   val_.resize(0);
-  nbr_val = M.nbr_val;
+  nbr_coef.resize(0);
 
-  for(int i=0; i<M.nbr_val; i++){
-    row.push_back(M.row[i]);
-    column.push_back(M.column[i]);
-    val_.push_back(M.val_[i]);
+  nbr_coef.push_back(0); //le premier terme vaut 0 par convention et sert a avoir des formule sans problèmes d'indices
+  for(int i=0; i<nbr_val; i++){
+    val_.push_back(0);
+  }
+
+  int somme_nbr_coef = 0;
+  for(int i=0; i<dl; i++){
+    somme_nbr_coef += i+1-v(i+1)+1;
+    nbr_coef.push_back(somme_nbr_coef);
+    if (v[i] > i+1){
+      stop_mat("PROFIL INCOMPATIBLE AVEC LA TAILLE DE LA MATRICE");
     }
-
+    profil.push_back(v[i]);
+  }
 }
 
-float matrice_profil :: operator() (int i, int j) const{
+
+matrice_profil_sym& matrice_profil_sym :: Id(){
+  if (dim_c != dim_l){
+      stop_mat("ON NE PEUT PAS TRANSFORMER UNE MATRICE RECTANGULAIRE EN L'IDENTITE");
+  }
+
+  val_.resize(dim_c);
+  profil.resize(dim_c);
+  nbr_coef.resize(dim_c+1);
+
+  vector<float> :: iterator itv;
+  itv = val_.begin();
+  vector<int> :: iterator itp;
+  itp = profil.begin();
+  vector<int> :: iterator itnb;
+  itnb = nbr_coef.begin();
+
+  nbr_val = dim_c;
+
+  *itnb = 0;
+  itnb++;
+
+  for(int i=1; i<= dim_c; i++){
+    *itv = 1;
+    *itp = i;
+    *itnb = i;
+
+    itv++;
+    itp++;
+    itnb++;}    
+
+    return *this;
+}
+
+matrice_profil_sym& matrice_profil_sym :: J(){
+  if (dim_c != dim_l){
+      stop_mat("ON NE PEUT PAS TRANSFORMER UNE MATRICE RECTANGULAIRE EN MATRICE CARRE");
+  }
+
+  val_.resize((dim_l*(dim_l+1))/2);
+  profil.resize(dim_c);
+  nbr_coef.resize(dim_c+1);
+
+  vector<float> :: iterator itv;
+  itv = val_.begin();
+  vector<int> :: iterator itp;
+  itp = profil.begin();
+  vector<int> :: iterator itnb;
+  itnb = nbr_coef.begin();
+
+  nbr_val = (dim_l*(dim_l+1)) /2;
+
+  *itnb = 0;
+  itnb++;
+
+  for(int i=1; i<= dim_l; i++){
+    *itp = 1;
+    *itnb = i + nbr_coef[i-1];
+    itnb++;
+    itp++;
+}    
+
+  
+  for(int i=1; i<= nbr_val; i++){
+    *itv = 1;
+    itv++;} 
+
+    return *this;
+}
+
+
+float matrice_profil_sym :: operator()(int i, int j) const{
   if (i>dim_l || i<=0){
-    stop_mat("INDICE DE LIGNE INCORRECT");
+        stop_mat("INDICE DE LIGNE INCORRECT");
   }
-
   else if (j>dim_c || j<=0){
-    stop_mat("INDICE DE COLONNE INCORRECT");
+        stop_mat("INDICE DE COLONNE INCORRECT");
   }
 
-  int r=0;
-  for(r=0; r<nbr_val; r++){
-    if ( row[r] == i && column[r] == j ){
-      return val_[r];
+  if(i>=j){
+
+    int debut_ligne = profil[i-1];
+    if(j < debut_ligne){ //verifie si l'on cherche un coef dans le profil
+      return 0;
     }
-  }
-  return 0;
+
+    else if(j>=debut_ligne){
+      return val_[nbr_coef[i-1] + j- debut_ligne ];
+    }
+
 }
 
-void matrice_profil :: operator() (int i, int j, float coef){
+else{
+  return (*this)(j,i);
+}
+
+}
+
+void matrice_profil_sym :: operator()(int i, int j,float coef){
   if (i>dim_l || i<=0){
-    stop_mat("INDICE DE LIGNE INCORRECT");
+        stop_mat("INDICE DE LIGNE INCORRECT");
   }
-
   else if (j>dim_c || j<=0){
-    stop_mat("INDICE DE COLONNE INCORRECT");
+        stop_mat("INDICE DE COLONNE INCORRECT");
   }
 
-  int r=0;
-  bool coef_nul = true;
-  for(r=0; r<nbr_val; r++){
-    if ( row[r] == i && column[r] == j ){
-      val_[r] = coef;
-      coef_nul = false;
-    }
-  }
-  if (coef_nul){
-    row.push_back(i);
-    column.push_back(j);
-    val_.push_back(coef);
-    nbr_val = nbr_val+1;
-  }
-}
+  if(i>=j){
 
-
-matrice_profil& matrice_profil :: operator+=(const matrice_profil& M){
-  if (dim_l != M.diml() || dim_c != M.dimc()){
-    stop_mat("TAILLES DES MATRICES INCOMPATIBLES POUR L'ADDITION");
-  }
-  for (int j=0; j<M.nbr_val; j++){
-    float coef_act = (*this)(M.row[j],M.column[j]);
-    (*this)(M.row[j],M.column[j], coef_act + M.val_[j]);
-  }
-  return *this;
-}
-
-matrice_profil& matrice_profil :: operator=(const matrice_profil& M){
-  if ( dim_c != M.dim_c || dim_l != M.dim_l){
-    stop_mat("ERREUR DE DIMENSION");
-  }
-  row.resize(M.nbr_val);
-  column.resize(M.nbr_val);
-  val_.resize(M.nbr_val);
-  nbr_val = M.nbr_val;
-
-  int i =0;
-  for(i=0; i<M.nbr_val; i++){
-    row[i] = M.row[i];
-    column[i] = M.column[i];
-    val_[i] = M.val_[i];
+    int debut_ligne = profil[i-1];
+    if(j < debut_ligne){ //verifie si l'on cherche un coef dans le profil
+      stop_mat("ERREUR : MODIFICATION DU PROFIL");
     }
 
-  return *this;
+    else if(j>=debut_ligne){
+      val_[nbr_coef[i-1] + j - debut_ligne ] = coef;
+    }
+
 }
 
-ostream& operator<<(ostream &out, const matrice_profil& M)
+else{
+  (*this)(j,i);
+}
+
+}
+
+ostream& operator<<(ostream &out, const matrice_profil_sym& M)
 {
 
 for (int i=0;i<M.diml(); i++){
@@ -266,214 +351,211 @@ for (int i=0;i<M.diml(); i++){
 return out;
 }
 
-matrice_profil operator + (matrice_profil&A, matrice_profil& B){
-  if (A.diml() != B.diml() || A.dimc() != B.dimc()){
+matrice_profil_sym& matrice_profil_sym :: operator=(const matrice_profil_sym& M){
+val_.resize(M.val_.size());
+profil.resize(M.profil.size());
+nbr_coef.resize(M.nbr_coef.size());
+dim_c = M.dimc();
+dim_l = M.diml();
+
+for(int i=0; i< (int) M.val_.size(); i++){
+  val_[i] = M.val_[i];
+}
+
+for(int i=0; i< (int) M.nbr_coef.size(); i++){
+  nbr_coef[i] = M.nbr_coef[i];
+}
+
+for(int i=0; i<(int) M.profil.size(); i++){
+  profil[i] = M.profil[i];
+}
+return *this;
+}
+
+matrice_profil_sym& matrice_profil_sym :: operator +=(const matrice_profil_sym& M){
+  if (dim_l != M.diml() || dim_c != M.dimc()){
     stop_mat("TAILLES DES MATRICES INCOMPATIBLES POUR L'ADDITION");
   }
-  matrice_profil R(A);
-
-  for (int j=0; j<B.nbr_val; j++){
-    float coef_act = R(B.row[j],B.column[j]);
-    R(B.row[j],B.column[j], coef_act + B.val_[j]);
+  for(int i=0; i< (int) profil.size(); i++){
+    if (profil[i] != M.profil[i]){
+      stop_mat("ERREUR : ON NE PEUT PAS ADDITIONER 2 MATRICES AUX PROFILS DIFFRENTS");
+      break;
+    }
   }
-  return R;
+
+  for (int j=0; j< (int) M.val_.size(); j++){
+    val_[j] = val_[j] + M.val_[j];
+  }
+  return *this;
 }
 
-matrice_profil operator - (matrice_profil&A, matrice_profil& B){
-  if (A.diml() != B.diml() || A.dimc() != B.dimc()){
+matrice_profil_sym& matrice_profil_sym :: operator -=(const matrice_profil_sym& M){
+  if (dim_l != M.diml() || dim_c != M.dimc()){
     stop_mat("TAILLES DES MATRICES INCOMPATIBLES POUR L'ADDITION");
   }
-  matrice_profil R(A);
-
-  for (int j=0; j<B.nbr_val; j++){
-    float coef_act = R(B.row[j],B.column[j]);
-    R(B.row[j],B.column[j], coef_act - B.val_[j]);
+  for(int i=0; i< (int) profil.size(); i++){
+    if (profil[i] != M.profil[i]){
+      stop_mat("ERREUR : ON NE PEUT PAS ADDITIONER 2 MATRICES AUX PROFILS DIFFRENTS");
+      break;
+    }
   }
-  return R;
+
+  for (int j=0; j<(int)M.val_.size(); j++){
+    val_[j] = val_[j] - M.val_[j];
+  }
+  return *this;
 }
 
 
-matrice_profil operator * (matrice_profil&A, const float& x){
-  matrice_profil P(A.diml(), A.dimc() );
-  P.nbr_val = A.nbr_val;
-  for (int i=1; i<P.diml()+1; i++){
-    for (int j=1; j<P.dimc()+1; j++){
-      float coef = x * A(i,j);
-      if (coef != 0){
-        P.row.push_back(i);
-        P.column.push_back(j);
-        P.val_.push_back(coef);
-      }
-    }  
+matrice_profil_sym operator + (const matrice_profil_sym&A, const matrice_profil_sym& B){
+  if (A.diml() != B.diml() || A.dimc() != B.dimc()){
+      stop_mat("TAILLES DES MATRICES INCOMPATIBLES POUR L'ADDITION");
+    }
+  for(int i=0; i< (int) A.profil.size(); i++){
+    if (A.profil[i] != B.profil[i]){
+      stop_mat("ERREUR : ON NE PEUT PAS ADDITIONER 2 MATRICES AUX PROFILS DIFFRENTS");
+      break;
+    }
   }
-  return P;
+
+  matrice_profil_sym Somme(A);
+  Somme+=B;
+  return Somme;
+
 }
 
-matrice_profil operator * (const float& x, matrice_profil&A){
-  matrice_profil P(A.diml(), A.dimc() );
-  P.nbr_val = A.nbr_val;
-  for (int i=1; i<P.diml()+1; i++){
-    for (int j=1; j<P.dimc()+1; j++){
-      float coef = x * A(i,j);
-      if (coef != 0){
-        P.row.push_back(i);
-        P.column.push_back(j);
-        P.val_.push_back(coef);
-      }
-    }  
+matrice_profil_sym operator - (const matrice_profil_sym&A, const matrice_profil_sym& B){
+  if (A.diml() != B.diml() || A.dimc() != B.dimc()){
+      stop_mat("TAILLES DES MATRICES INCOMPATIBLES POUR L'ADDITION");
+    }
+  for(int i=0; i<(int) A.profil.size(); i++){
+    if (A.profil[i] != B.profil[i]){
+      stop_mat("ERREUR : ON NE PEUT PAS SOUSTRAIRE 2 MATRICES AUX PROFILS DIFFRENTS");
+      break;
+    }
   }
-  return P;
+  matrice_profil_sym Difference(A);
+  Difference-=B;
+  return Difference;
+}
+
+matrice_profil_sym operator * (const float& x, const matrice_profil_sym&A){
+  matrice_profil_sym Produit(A);
+  for (int j=0; j<(int) A.val_.size(); j++){
+    Produit.val_[j] = x*Produit.val_[j];
+  }
+  return Produit;
+}
+
+matrice_profil_sym operator * (const matrice_profil_sym&A, const float& x){
+
+  return x*A;
+}
+
+vecteur operator * (const matrice_profil_sym& A, const vecteur& v){
+  if (v.dim() != A.dimc()){
+    stop_mat("VECTEUR ET MATRICE INCOMPATIBLES POUR LE PRODUIT");
+  }
+  vecteur produit(A.diml());
+  for(int i=1; i<A.diml()+1; i++){
+    for(int k=A.profil[i-1]; k<v.dim()+1;k++){
+      produit(i) += v(k)*A(i,k);
+    }
+  }
+  return produit;
+
+
+}
+
+void matrice_profil_sym :: info_mat(){
+  for(int i=0; i<(int) val_.size();i++){
+      cout<<"val_ "<<val_[i]<<" ";
+  }
+  cout<<"\n";
+
+  for(int i=0; i<(int) profil.size();i++){
+      cout<<"profil "<<profil[i]<<" ";
+  }
+cout<<"\n";
+
+for(int i=0; i<(int) nbr_coef.size();i++){
+  cout<<"nbr_coef "<<nbr_coef[i]<<" ";
+}
+cout<<"\n";
 }
 
 
-matrice_profil& matrice_profil :: Id(){
-  if (dim_c != dim_l){
-    stop_mat("ON NE PEUT PAS TRANSFORMER UNE MATRICE RECTANGULAIRE EN L'IDENTITE");
+///////////////////////////////////////// FONCTION AVANCEES /////////////////////////////////
+
+matrice_profil_sym cholesky(const matrice_profil_sym& A){
+
+  //Factorisation de cholesky d'une matrice défini positive
+  vecteur v(A.diml());
+  for (int i=0; i<A.diml(); i++){
+    v[i] = A.profil[i];
   }
-  val_.resize(dim_c);
-  column.resize(dim_c);
-  row.resize(dim_c);
-  vector<float> :: iterator itv;
-  itv = val_.begin();
-  vector<int> :: iterator itc;
-  itc = column.begin();
-  vector<int> :: iterator itr;
-  itr = row.begin();
+  matrice_profil_sym L(A.diml(),A.dimc(), v);
 
-  nbr_val = dim_c;
-
-  for(int i=1; i<= dim_c; i++){
-    *itc = i;
-    *itr = i;
-    *itv = 1;
-    itv++;
-    itc++;
-    itr++;
-      }
-
-    return *this;
-}
-
-/*matrice_profil cholesky(matrice_profil A){
-  matrice_profil L;
-  for (int p=1; p<=A.diml(); p++){
-    double valeur =A(p,p);
-    for (int k=A.profil(p); k<p; k++){
+  for(int p=1; p<= A.dimc();p++){
+    float valeur = A(p,p);
+    for (int k=1; k<= p-1; k++){
       valeur -= L(p,k)*L(p,k);
     }
-    L(p,p)=sqrt(val);
-    for (int j=p+1; j<=A.diml(); j++){
-      valeur = A(p,j);
-      int m = max(A.profil(p),A.profil(j));
-      for (int k=m; k<j;k++){
-        valeur -= L(p,k)*L(j,k);
+    valeur = sqrt(valeur);
+    L(p,p,valeur);
+
+    for(int i=p+1; i<=A.dimc(); i++){
+      if (p>= A.profil[i-1]){
+        float valeur = A(i,p);
+        for (int k=1; k<= p-1; k++){
+          valeur -= L(i,k)*L(p,k);
+          }
+        valeur = valeur /L(p,p);
+        L(i,p,valeur);
       }
-      L(p,j)=valeur/L(j,j);
+
     }
+
   }
+
   return L;
+
 }
 
-vecteur resol(matrice_profil A, vecteur y){
-  // résout le problème Ax=y en utilisant la factorisation de Cholesky A =LLt
-  // où A est symétrique définie positive et stockée en profil
-  // On résout d'abord Lz=y
-  vecteur x(L.dim()); vecteur z(l.dim());
-  matrice_profil L = cholesky(A);
-  int i=1; int j;
-  double valeur;
-  for (; i<=L.dim(); i++){
-    valeur = y(i)
-    for (j=1; j<i; j++){
-      valeur -= L(i,j)*z(j);
-    }
-    z(i)=valeur/L(i,i);
-  }
-  // puis on résout Ltx=z
-  for (i=L.dim(); i=1; i--){
-    valeur=z(i);
-    for (j=L.dim();j>i; j--){
-      valeur -= L(j,i)*x(j);
-    }
-    x(i)=valeur/L(i,i);
-  }
-  return x;
-} */
 
-/*matrice_profil operator * (matrice_profil&A, const float& x){
-  matrice_pleine r(A.diml(),A.dimc());
-  matrice_profil R(r);
+vecteur resol(const matrice_profil_sym& A, const vecteur& b){
+ // résout le problème Ax=b en utilisant la factorisation de Cholesky A =LLt
 
-  for (int j=0; j<A.nbr_val; j++){
-    float coef = x * A.val_[j];
-    R(A.row[j],A.column[j], coef );
-  }
-  return R;
-}*/
-
-/*matrice_profil operator * (const float& x, matrice_profil&A){
-  matrice_pleine r(A.diml(),A.dimc());
-  matrice_profil R(r);
-
-  for (int j=0; j<A.nbr_val; j++){
-    float coef = x * A.val_[j];
-    R(A.row[j],A.column[j], coef);
-  }
-  return R;
-}
-
-*/
-
-/*float matrice_profil :: operator() (int i, int j) const{
-  if (i>dim_l || i<=0){
-    stop_mat("INDICE DE LIGNE INCORRECT");
-  }
-
-  else if (j>dim_c || j<=0){
-    stop_mat("INDICE DE COLONNE INCORRECT");
-  }
-
-  vector<int> :: const_iterator itr;
-  itr = row.begin();
-  vector<int> :: const_iterator itc;
-  itc = column.begin();
-  vector<float> :: const_iterator itv;
-  itv = val_.begin();
+ if (A.diml() != b.dim()){
+   stop_mat("TAILLES INCOMPATIBLES POUR LA RESOLUTION DE SYSTEMES LINEAIRES");
+ }
+  matrice_profil_sym L(A);
+  L = cholesky(A);
+ //on résout d'abord Ly = b 
   
-  for(; itr != row.end(); itr++,itv++,itc++){
-    if ( *itr == i && *itc == j ){
-      return *itv;
+  vecteur y(L.diml());
+  for (int i=1; i<b.dim()+1; i++){
+    float valeur =b(i);
+    for (int j= L.profil[i-1]; j<i; j++){
+      valeur -= y(j)* L(i,j);
     }
+    y(i) = (valeur)/L(i,i);
+
   }
-  return 0;
+
+  cout<<"valeur de y = "<<y<<"\n";
+
+  //on résout maintenant Ltx= y
+  vecteur x(L.diml());
+  for (int i=b.dim(); i>=1; i--){
+    float valeur = y(i);
+    for (int j= L.dimc(); j>i; j--){
+      valeur -= x(j)*L(i,j);
+    }
+    x(i) = (valeur)/L(i,i);
+
+  }
+
+  return x; 
+
 }
-
-void matrice_profil :: operator() (int i, int j, float coef){
-  if (i>dim_l || i<=0){
-    stop_mat("INDICE DE LIGNE INCORRECT");
-  }
-
-  else if (j>dim_c || j<=0){
-    stop_mat("INDICE DE COLONNE INCORRECT");
-  }
-
-  vector<int> :: iterator itr;
-  itr = row.begin();
-  vector<int> :: iterator itc;
-  itc = column.begin();
-  vector<float> :: iterator itv;
-  itv = val_.begin();
-
-  bool coef_nul = true;
-  for(; itr != row.end(); itr++,itv++,itc++){
-    if ( *itr == i && *itc == j ){
-      *itv = coef;
-      coef_nul = false;
-    }
-  }
-  if (coef_nul){
-    row.push_back(i);
-    column.push_back(j);
-    val_.push_back(coef);
-  }
-}*/
