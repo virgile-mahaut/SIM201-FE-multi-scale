@@ -4,6 +4,8 @@
 #include <vector>
 #include <list>
 #include "maillage.hpp"
+#include "EF_principal.hpp"
+#include "mat_elem.hpp"
 using namespace std;
 
 //================================================================
@@ -196,15 +198,15 @@ void Maillage::profil(){
 }
 
 
-/*void Maillage::assemblage(){
-    matrice_profil MM(M.sommets.size(),M.sommets.size()), 
-                   KK(M.sommets.size(),M.sommets.size()),
-                   Kel, Mel;
-    list<Triangle>::const_iterator itt = M.triangles.begin();
-    for (; itt!=M.triangles.end(); itt++){
+void Maillage::assemblage(){
+	matrice_profil_sym MM(sommets.size(),sommets.size(),P_), 
+                       KK(sommets.size(),sommets.size(),P_);
+	pf f = F; pf a = A;
+    list<Triangle>::const_iterator itt = triangles.begin();
+    for (; itt!=triangles.end(); itt++){
         // calcul des matrices élémentaires
-        Kel = matK_elem(M.sommets);
-        Mel = matM_elem(K.sommets);
+        matrice_profil_sym Kel = k_elem(sommets[(*itt)[0]-1],sommets[(*itt)[1]-1],sommets[(*itt)[2]-1],*this,a);
+		matrice_profil_sym Mel = m_elem(sommets[(*itt)[0]-1],sommets[(*itt)[1]-1],sommets[(*itt)[2]-1]);
         int i,j,I,J;
         // assemblage des matrices globales
         for (i=1; i<=3; i++){
@@ -216,7 +218,21 @@ void Maillage::profil(){
             }
         }
     }
-}*/
+	vecteur FF = transforme_f(*this,f); vecteur LL = MM*FF;
+	// élimination au bord du domaine
+	for (int I=1; I<=sommets.size(); I++){
+		if (sommets[I-1].reference == 1){
+			for (int J=I+1; J<=sommets.size(); J++){
+				if (I >= P_[J-1]) KK(J,I)=0;
+			}
+			KK(I,I)=1; LL(I)=0;
+		}
+	}
+	vecteur UU = resol(KK,LL);
+	for (int i=1; i<=UU.dim();i++){
+		sommets[i-1].u = UU(i);
+	}
+}
 
 
 void Maillage::output() const{
@@ -264,4 +280,13 @@ void Maillage::affiche() const{
 	for(;itp!=P_.end();itp++,i++){
 		cout<<"P_("<<i<<") = "<<(*itp)<<endl;
 	}
+}
+
+vecteur transforme_f(Maillage& M, pf f){
+    // calcule le vecteur (f(M_k))
+    vecteur v(M.sommets.size());
+    for (int i=0; i<M.sommets.size(); i++){
+        v(i+1)=f(M.sommets[i].x,M.sommets[i].y);
+    }
+    return v;
 }
