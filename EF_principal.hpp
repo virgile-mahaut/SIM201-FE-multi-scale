@@ -1,11 +1,8 @@
 #ifndef __EF_H__
 #define __EF_H__
+#include "vecteur.hpp"
 
-typedef double (*pf)(double,double);
-// pointeur d'une fonction double f(double, double)
-
-vector<double> transforme(Maillage M, pf f);
-
-double affine(double x,double y);
+double A(double x, double y);
+double F(double x, double y);
 
 #endif

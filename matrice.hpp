@@ -41,6 +41,7 @@ public :
 
 };
 
+matrice_pleine transpose(const matrice_pleine&A);
 matrice_pleine operator + (const matrice_pleine&A, const matrice_pleine& B);
 matrice_pleine operator - (const matrice_pleine&A, const matrice_pleine& B);
 matrice_pleine operator * (const matrice_pleine&A, const float& x);
@@ -61,11 +62,11 @@ public:
 
     matrice_profil_sym(const matrice_profil_sym& M);
     matrice_profil_sym(int dl, int dc); //crée une matrice profil nulle
-    matrice_profil_sym(int dl, int dc, const vecteur& v); //crée une matrice nulle dont le profil est donnée par le vecteur v : profil[i] = v[i]
+    matrice_profil_sym(int dl, int dc, const vector<int>& v); //crée une matrice nulle dont le profil est donnée par le vecteur v : profil[i] = v[i]
 
 //SURCHARGE D'OPERATEUR
 
-void operator () (int i, int j,float coef); //permet de donner au coef (i,j) la valeur coef, indexaation commence à 1, LE COEF DOIT ETRE DANS LE PROFIL, SINON ERREUR
+float& operator () (int i, int j); //permet de donner au coef (i,j) la valeur coef, indexaation commence à 1, LE COEF DOIT ETRE DANS LE PROFIL, SINON ERREUR
 float operator() (int i, int j) const; //accède au terme (i,j) attention l'indexation commence à 1
 
 

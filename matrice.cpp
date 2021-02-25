@@ -70,6 +70,16 @@ float matrice_pleine :: operator()(int i, int j) const{ //attention les indices 
   return val_[dim_c * (i-1) + (j-1)];}
 }
 
+matrice_pleine transpose(const matrice_pleine&A){
+  matrice_pleine B(A.dimc(), A.diml());
+  for (int i=1; i<=A.dimc(); i++){
+    for (int j=1; j<=A.diml(); j++){
+      B(i,j)=A(i,j);
+    }
+  }
+  return B;
+}
+
 ostream& operator<<(ostream &out, const matrice_pleine& M)
 {
 
@@ -185,14 +195,14 @@ matrice_profil_sym :: matrice_profil_sym(const matrice_profil_sym& M){
     
 }
 
-matrice_profil_sym :: matrice_profil_sym(int dl, int dc, const vecteur& v){
+matrice_profil_sym :: matrice_profil_sym(int dl, int dc, const vector<int>& v){
   dim_l = dl;
   dim_c = dc;
   profil.resize(0);
 
   nbr_val = 0;
-  for (int i=1; i<v.dim()+1; i++){
-    nbr_val += i-v(i)+1;
+  for (int i=1; i<v.size()+1; i++){
+    nbr_val += i-v[i-1]+1;
   }
   val_.resize(0);
   nbr_coef.resize(0);
@@ -204,7 +214,7 @@ matrice_profil_sym :: matrice_profil_sym(int dl, int dc, const vecteur& v){
 
   int somme_nbr_coef = 0;
   for(int i=0; i<dl; i++){
-    somme_nbr_coef += i+1-v(i+1)+1;
+    somme_nbr_coef += i+1-v[i]+1;
     nbr_coef.push_back(somme_nbr_coef);
     if (v[i] > i+1){
       stop_mat("PROFIL INCOMPATIBLE AVEC LA TAILLE DE LA MATRICE");
@@ -311,7 +321,7 @@ else{
 
 }
 
-void matrice_profil_sym :: operator()(int i, int j,float coef){
+float& matrice_profil_sym :: operator()(int i, int j){
   if (i>dim_l || i<=0){
         stop_mat("INDICE DE LIGNE INCORRECT");
   }
@@ -327,13 +337,13 @@ void matrice_profil_sym :: operator()(int i, int j,float coef){
     }
 
     else if(j>=debut_ligne){
-      val_[nbr_coef[i-1] + j - debut_ligne ] = coef;
+      return val_[nbr_coef[i-1] + j - debut_ligne ];
     }
 
 }
 
 else{
-  (*this)(j,i);
+  return (*this)(j,i);
 }
 
 }
@@ -490,36 +500,25 @@ cout<<"\n";
 matrice_profil_sym cholesky(const matrice_profil_sym& A){
 
   //Factorisation de cholesky d'une matrice défini positive
-  vecteur v(A.diml());
-  for (int i=0; i<A.diml(); i++){
-    v[i] = A.profil[i];
-  }
-  matrice_profil_sym L(A.diml(),A.dimc(), v);
+  matrice_profil_sym L(A.diml(),A.dimc(),A.profil);
 
   for(int p=1; p<= A.dimc();p++){
+    for(int j=A.profil[p-1]; j<=p-1; j++){
+      float valeur = A(p,j);
+      int m = max(A.profil[p-1], A.profil[j-1]);
+      for (int k=m; k<=j-1; k++){
+        valeur -= L(p,k)*L(j,k);
+      }
+      L(p,j) = valeur/L(j,j);
+    }
     float valeur = A(p,p);
-    for (int k=1; k<= p-1; k++){
+    for (int k=A.profil[p-1]; k<= p-1; k++){
       valeur -= L(p,k)*L(p,k);
     }
     valeur = sqrt(valeur);
-    L(p,p,valeur);
-
-    for(int i=p+1; i<=A.dimc(); i++){
-      if (p>= A.profil[i-1]){
-        float valeur = A(i,p);
-        for (int k=1; k<= p-1; k++){
-          valeur -= L(i,k)*L(p,k);
-          }
-        valeur = valeur /L(p,p);
-        L(i,p,valeur);
-      }
-
-    }
-
+    L(p,p)=valeur;
   }
-
   return L;
-
 }
 
 
@@ -534,28 +533,26 @@ vecteur resol(const matrice_profil_sym& A, const vecteur& b){
  //on résout d'abord Ly = b 
   
   vecteur y(L.diml());
-  for (int i=1; i<b.dim()+1; i++){
+  for (int i=1; i<=b.dim(); i++){
     float valeur =b(i);
     for (int j= L.profil[i-1]; j<i; j++){
       valeur -= y(j)* L(i,j);
     }
     y(i) = (valeur)/L(i,i);
-
   }
-
-  cout<<"valeur de y = "<<y<<"\n";
-
   //on résout maintenant Ltx= y
   vecteur x(L.diml());
   for (int i=b.dim(); i>=1; i--){
     float valeur = y(i);
-    for (int j= L.dimc(); j>i; j--){
-      valeur -= x(j)*L(i,j);
+    for (int j=L.diml(); j>=i+1; j--){
+      if (i>=L.profil[j-1]){
+        //cout<<"profil("<<i<<")="<<L.profil[i-1]<<" et L("<<i<<","<<j<<")="<<L(i,j)<<endl;
+        valeur -= x(j)*L(i,j);
+      }
     }
     x(i) = (valeur)/L(i,i);
 
   }
-
   return x; 
 
 }
