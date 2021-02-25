@@ -3,7 +3,13 @@
 #include <iostream>
 #include <vector>
 #include <list>
+#include "vecteur.hpp"
+#include "matrice.hpp"
+#include "EF_principal.hpp"
 using namespace std;
+
+typedef double (*pf)(double,double);
+// pointeur d'une fonction double f(double, double)
 
 class Point{
  public:
@@ -44,13 +50,14 @@ class Maillage{
  public:
 	vector<Point> sommets;
 	list<Triangle> triangles;
-   vector<int> P_;
+    vector<int> P_;
 	void lecture_msh();
     void profil();
-	// void assemblage();
-	Maillage(){lecture_msh(); profil();/* assemblage();*/}
+	void assemblage();
+	Maillage(){lecture_msh(); profil(); assemblage();}
     void output() const;
     void affiche() const;
 };
 
+vecteur transforme_f(Maillage& M, pf f);
 #endif
