@@ -14,7 +14,8 @@ typedef double (*pf)(double,double);
 class Point{
  public:
  	double x, y, u; // u = u(x,y) pour la solution u
-    int reference;
+    int reference; // vaut 1 si le point est sur le bord du maillage
+    bool grossier=false; // vrai si le point appartient au maillage grossier (seulement pour les sous-maillages)
  	Point(double a=0, double b=0, int c=0, int ref=0):x(a),y(b),u(c),reference(ref){}
  	Point(const Point& P):x(P.x),y(P.y),u(P.u){}
  	Point& tf_affine(const vector<double>& A, const vector<double>& t);
@@ -51,10 +52,12 @@ class Maillage{
 	vector<Point> sommets;
 	list<Triangle> triangles;
     vector<int> P_;
-	void lecture_msh();
+	void lecture_msh(string nomFichier);
     void profil();
 	void assemblage();
-	Maillage(){lecture_msh(); profil(); assemblage();}
+	Maillage(string nomFichier){lecture_msh(nomFichier); profil(); assemblage();}
+    Maillage(){}
+    void fusion(const list<Maillage>& SM);
     void output() const;
     void affiche() const;
 };

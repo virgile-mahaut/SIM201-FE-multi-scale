@@ -115,8 +115,8 @@ vector<int> stovi(string& str){
 }
 
 
-void Maillage::lecture_msh(){
-	ifstream maillage("geomCarre.msh"); // to modify depending on the repository
+void Maillage::lecture_msh(string nomFichier){
+	ifstream maillage(nomFichier); // to modify depending on the repository
 
 	if (maillage){
 		string ligne;
@@ -289,4 +289,20 @@ vecteur transforme_f(Maillage& M, pf f){
         v(i+1)=f(M.sommets[i].x,M.sommets[i].y);
     }
     return v;
+}
+
+void Maillage::fusion(const list<Maillage>& SM){
+	list<Maillage>::const_iterator itm=SM.begin();
+	list<Triangle>::const_iterator itt;
+	triangles.clear();
+	for (; itm!=SM.end(); itm++){
+		for (itt==(*itm).triangles.begin(); itt!=(*itm).triangles.end(); itt++){
+			triangles.push_back(*itt);
+			for (int i=0; i<3; i++){
+				if (!((*itm).sommets[(*itt)[i]].grossier)){
+					sommets.push_back((*itm).sommets[(*itt)[i]]);
+				}
+			}
+		}
+	}
 }

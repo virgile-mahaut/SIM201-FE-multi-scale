@@ -21,7 +21,7 @@ int main()
     vecteur x = resol(A,y);
     cout<<"vecteur x :\n"<<x<<endl;
     cout<<"Ax = "<<A*x<<endl;*/
-    Maillage M;
+    Maillage M("geomCarre.msh");
     M.output();
 }
 
