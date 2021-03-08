@@ -67,10 +67,10 @@ Maillage sous_maillage(Maillage &M){
         ref = 0;
         Point BC(x,y,0,ref);
 
-        // Numeros des nouveaux points
-        M2.sommets[k] = AB;
-        M2.sommets[k+1] = AC;
-        M2.sommets[k+2] = BC;
+        // Ajout des nouveaux points
+        M2.sommets.push_back(AB);
+        M2.sommets.push_back(AC);
+        M2.sommets.push_back(BC);
 
         // Nouveaux triangles
         Triangle A2(A,k,k+1);   // Triangle (A,AB,AC)
