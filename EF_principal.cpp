@@ -24,4 +24,8 @@ double trace_multi_echelle (double x, double y, Point S1, Point S2, Point S3){
     return val;
 }
 
+double sol_exact_validation(double x, double y){ //fonction de validation du code, pour le calcul des erreurs
+    return sin(3.14159*x)*sin(3.14159*y);
+}
+
 
