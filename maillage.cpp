@@ -306,3 +306,53 @@ void Maillage::fusion(const list<Maillage>& SM){
 		}
 	}
 }
+
+
+
+void Maillage :: ERREUR_L2_H1(){
+	//on recalcule les matrices de masse et de rigidité
+
+	matrice_profil_sym MM(sommets.size(),sommets.size(),P_), 
+                       KK(sommets.size(),sommets.size(),P_);
+	pf f = F; pf a = A;
+    list<Triangle>::const_iterator itt = triangles.begin();
+    for (; itt!=triangles.end(); itt++){
+        // calcul des matrices élémentaires
+        matrice_profil_sym Kel = k_elem(sommets[(*itt)[0]-1],sommets[(*itt)[1]-1],sommets[(*itt)[2]-1],*this,a);
+		matrice_profil_sym Mel = m_elem(sommets[(*itt)[0]-1],sommets[(*itt)[1]-1],sommets[(*itt)[2]-1]);
+        int i,j,I,J;
+        // assemblage des matrices globales
+        for (i=1; i<=3; i++){
+            I=(*itt)[i-1];
+            for (j=1; j<=i; j++){
+                J = (*itt)[j-1];
+                MM(I,J)+=Mel(i,j);
+                KK(I,J)+=Kel(i,j);
+            }
+        }
+    }
+//on recupère les vecteur
+	vecteur UU_exact(sommets.size());
+	vecteur UU(sommets.size());
+	
+	for(int i=0; i<sommets.size(); i++){
+		UU(i+1) = sommets[i].u;
+		double x = sommets[i].x;
+		double y = sommets[i].y;
+		UU_exact(i+1) = sol_exact_validation(x,y);
+	}
+	vecteur Erreur = UU - UU_exact;
+	Erreur.abs();
+
+	vecteur w = MM*Erreur;
+	double erreur_L2 = Erreur | w;
+
+
+	vecteur z = KK*Erreur;
+	double erreur_H1 = Erreur | z;
+
+	cout<<"L'Erreur L2 vaut : "<<erreur_L2<<"\n";
+	cout<<"L'Erreur H1 vaut : "<<erreur_H1<<"\n";
+
+}
+
