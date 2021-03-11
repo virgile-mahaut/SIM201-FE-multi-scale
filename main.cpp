@@ -22,6 +22,13 @@ int main()
     cout<<"vecteur x :\n"<<x<<endl;
     cout<<"Ax = "<<A*x<<endl;*/
     Maillage M("geomCarre.msh");
+    //cout<<"1\n";
+    list<Maillage> SM = sous_maillage(M);
+    //cout<<"2\n";
+    M.fusion(SM);
+    M.affiche();
+    //cout<<"3\n";
+    M.assemblage();
     M.output();
 }
 
