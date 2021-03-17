@@ -30,6 +30,7 @@ int main()
     //cout<<"3\n";
     M.assemblage();
     M.output();
+    M.ERREUR_L2_H1();
 }
 
 
