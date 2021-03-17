@@ -61,6 +61,7 @@ class Maillage{
     void fusion(const list<Maillage>& SM);
     void output() const;
     void affiche() const;
+	void ERREUR_L2_H1();
 };
 
 vecteur transforme_f(Maillage& M, pf f);
