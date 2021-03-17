@@ -2,12 +2,7 @@
 #define matrice_h
 
 #include <iostream>
-#include <vector>
 #include "vecteur.hpp"
-using namespace std;
-
-#include <iostream>
-#include <vector>
 using namespace std;
 
 

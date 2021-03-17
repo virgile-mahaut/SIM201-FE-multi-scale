@@ -1,11 +1,6 @@
 #include <iostream>
 #include <fstream>
-#include <string>
-#include <vector>
-#include <list>
 #include "maillage.hpp"
-#include "EF_principal.hpp"
-#include "mat_elem.hpp"
 using namespace std;
 
 //================================================================
@@ -176,6 +171,9 @@ void Maillage::lecture_msh(string nomFichier){
 		}
 		triangles.push_back(Triangle(*(tmp.end()-3),*(tmp.end()-2),*(tmp.end()-1),*(tmp.end()-4)));
 	}
+	for (int i=0; i < sommets.size(); i++){
+		if (sommets[i].reference==1) Nbext++;
+	}
 }
 
 
@@ -195,48 +193,6 @@ void Maillage::profil(){
 			}
 		}
 	}
-}
-
-
-void Maillage::assemblage(){
-	matrice_profil_sym MM(sommets.size(),sommets.size(),P_), 
-                       KK(sommets.size(),sommets.size(),P_);
-	pf f = F; pf a = A;
-    list<Triangle>::const_iterator itt = triangles.begin();
-    for (; itt!=triangles.end(); itt++){
-        // calcul des matrices élémentaires
-		cout<<"1"<<endl;
-        matrice_profil_sym Kel = k_elem(sommets[(*itt)[0]-1],sommets[(*itt)[1]-1],sommets[(*itt)[2]-1],*this,a);
-		cout<<"2"<<endl;
-		matrice_profil_sym Mel = m_elem(sommets[(*itt)[0]-1],sommets[(*itt)[1]-1],sommets[(*itt)[2]-1]);
-        cout<<"3"<<endl;
-		int i,j,I,J;
-        // assemblage des matrices globales
-        for (i=1; i<=3; i++){
-            I=(*itt)[i-1];
-            for (j=1; j<=i; j++){
-                J = (*itt)[j-1];
-                MM(I,J)+=Mel(i,j);
-                KK(I,J)+=Kel(i,j);
-            }
-        }
-    }
-	vecteur FF = transforme_f(*this,f); vecteur LL = MM*FF;
-	// élimination au bord du domaine
-	for (int I=1; I<=sommets.size(); I++){
-		if (sommets[I-1].reference == 1){
-			for (int J=I+1; J<=sommets.size(); J++){
-				if (I >= P_[J-1]) KK(J,I)=0;
-			}
-			KK(I,I)=1; LL(I)=0;
-		}
-	}
-	cout<<"1"<<endl;
-	vecteur UU = resol(KK,LL);
-	for (int i=1; i<=UU.dim();i++){
-		sommets[i-1].u = UU(i);
-	}
-	cout<<"2"<<endl;
 }
 
 
@@ -286,155 +242,3 @@ void Maillage::affiche() const{
 		cout<<"P_("<<i<<") = "<<(*itp)<<endl;
 	}
 }
-
-vecteur transforme_f(Maillage& M, pf f){
-    // calcule le vecteur (f(M_k))
-    vecteur v(M.sommets.size());
-    for (int i=0; i<M.sommets.size(); i++){
-        v(i+1)=f(M.sommets[i].x,M.sommets[i].y);
-    }
-    return v;
-}
-
-void Maillage::fusion(const list<Maillage>& SM){
-	list<Maillage>::const_iterator itm=SM.begin();
-	list<Triangle>::const_iterator itt;
-	triangles.clear();
-	Triangle T;
-	int k=0;
-	for (; itm!=SM.end(); itm++){
-		for (itt=(*itm).triangles.begin(); itt!=(*itm).triangles.end(); itt++){
-			T(1) = (*itt)(1)+k; T(2) = (*itt)(2)+k; T(3) = (*itt)(3)+k;
-			triangles.push_back(T);
-			for (int i=0; i<3; i++){
-				if (!((*itm).sommets[(*itt)[i]].grossier)){
-					sommets.push_back((*itm).sommets[(*itt)[i]]);
-				}
-			}
-		}
-		k+=6;
-	}
-	profil();
-	cout<<"1"<<endl;
-}
-
-list<Maillage> sous_maillage(Maillage &M){
-    list<Maillage> SM;
-    
-    list<Triangle>::iterator it; // Iterateur sur une liste de type Triangle
-    for (it=M.triangles.begin(); it!=M.triangles.end(); ++it){ // Boucle sur la liste M.triangles
-        Maillage M2; M2.sommets.resize(6);
-
-        int A = (*it)[0];    // Numéro du 1er sommet du triangle courant
-        int B = (*it)[1];
-        int C = (*it)[2];
-
-        // Coordonnees des points A, B, C et ref du triangle courant
-        double xA = M.sommets[A].x;
-        double yA = M.sommets[A].y;
-        int refA = M.sommets[A].reference;
-
-        double xB = M.sommets[B].x;
-        double yB = M.sommets[B].y;
-        int refB = M.sommets[B].reference;
-
-        double xC = M.sommets[C].x;
-        double yC = M.sommets[C].y;
-        int refC = M.sommets[C].reference;
-
-        double x;
-        double y;
-        int ref;
-        // Point AB (nouveau point entre A et B)
-        x = (xA + xB)/2.; // x_AB = ( x_A + x_B )/2
-        y = (yA + yB)/2.;
-        ref = 0;
-        if (refA == 1 && refB == 1) ref = 1; // ref(AB) = 1 ssi ref(A) = ref(B) = 1
-        Point AB(x,y,0,ref);
-
-        // Point AC
-        x = (xA + xC)/2.;
-        y = (yA + yC)/2.;
-        ref = 0;
-        if (refA == 1 && refC == 1) ref = 1;
-        Point AC(x,y,0,ref);
-
-        // Point BC
-        x = (xB + xC)/2.;
-        y = (yB + yC)/2.;
-        ref = 0;
-        if (refB == 1 && refC == 1) ref = 1;
-        Point BC(x,y,0,ref);
-
-        // Ajout des points déjà existants
-        M2.sommets[0] = M.sommets[A]; M2.sommets[0].grossier = true;
-        M2.sommets[1] = M.sommets[B]; M2.sommets[1].grossier = true;
-        M2.sommets[2] = M.sommets[C]; M2.sommets[2].grossier = true;
-        // Ajout des nouveaux points
-        M2.sommets[3] = AB;
-        M2.sommets[4] = AC;
-        M2.sommets[5] = BC;
-        // Nouveaux triangles
-        Triangle A2(1,4,5);   // Triangle (A,AB,AC)
-        Triangle B2(2,4,6);
-        Triangle C2(3,5,6);
-        Triangle D2(4,5,6); // Triangle (AB,AC,BC)
-
-        // Ajout des nouveaux triangles 
-        M2.triangles.push_back(A2);
-        M2.triangles.push_back(B2);
-        M2.triangles.push_back(C2);
-        M2.triangles.push_back(D2);
-
-		M2.profil();
-
-        SM.push_back(M2);
-    }
-    return SM;
-}
-
-void Maillage :: ERREUR_L2_H1(){
-	//on recalcule les matrices de masse et de rigidité
-
-	matrice_profil_sym MM(sommets.size(),sommets.size(),P_), 
-                       KK(sommets.size(),sommets.size(),P_);
-	pf f = F; pf a = A;
-    list<Triangle>::const_iterator itt = triangles.begin();
-    for (; itt!=triangles.end(); itt++){
-        // calcul des matrices élémentaires
-        matrice_profil_sym Kel = k_elem(sommets[(*itt)[0]-1],sommets[(*itt)[1]-1],sommets[(*itt)[2]-1],*this,a);
-		matrice_profil_sym Mel = m_elem(sommets[(*itt)[0]-1],sommets[(*itt)[1]-1],sommets[(*itt)[2]-1]);
-        int i,j,I,J;
-        // assemblage des matrices globales
-        for (i=1; i<=3; i++){
-            I=(*itt)[i-1];
-            for (j=1; j<=i; j++){
-                J = (*itt)[j-1];
-                MM(I,J)+=Mel(i,j);
-                KK(I,J)+=Kel(i,j);
-            }
-        }
-    }
-//on recupère les vecteur
-	vecteur UU_exact(sommets.size());
-	vecteur UU(sommets.size());
-	
-	for(int i=0; i<sommets.size(); i++){
-		UU(i+1) = sommets[i].u;
-		double x = sommets[i].x;
-		double y = sommets[i].y;
-		UU_exact(i+1) = sol_exact_validation(x,y);
-	}
-	vecteur Erreur = UU - UU_exact;
-	vecteur w = MM*Erreur;
-	double erreur_L2 = Erreur | w;
-
-
-	vecteur z = KK*Erreur;
-	double erreur_H1 = Erreur | z;
-
-	cout<<"L'Erreur L2 au carrée vaut : "<<erreur_L2<<"\n";
-	cout<<"L'Erreur H1 au carrée vaut : "<<erreur_H1<<"\n";
-
-}
-

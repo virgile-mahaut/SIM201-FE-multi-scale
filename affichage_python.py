@@ -25,6 +25,11 @@ for i in range(4+nb_sommets, 4+nb_sommets+nb_triangles):
     vals = line.split(' ')
     triangles.append([int(vals[1])-1, int(vals[2])-1, int(vals[3])-1]) 
 triangles = np.array(triangles)
+
+print(x)
+print(y)
+print(z)
+print(triangles)
 # Creating figure 
 fig = plt.figure(figsize =(16, 9))   
 ax = plt.axes(projection ='3d')   
@@ -37,8 +42,10 @@ trisurf = ax.plot_trisurf(x, y, z, triangles=triangles,
                          cmap = my_cmap, 
                          linewidth = 0.2,  
                          antialiased = True, 
-                         edgecolor = 'grey')   
-fig.colorbar(trisurf, ax = ax, shrink = 0.5, aspect = 5)   
+                         edgecolor = 'grey')
+ax.tricontourf(x,y,z, triangles=triangles, zdir='z', offset=-1, cmap=my_cmap)  
+fig.colorbar(trisurf, ax = ax, shrink = 0.5, aspect = 5)
+ 
   
 # Adding labels 
 ax.set_xlabel('X-axis', fontweight ='bold')  

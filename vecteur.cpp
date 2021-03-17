@@ -82,7 +82,7 @@ double& vecteur :: operator()(int i){
   return val_[i-1];
 }
 
-double vecteur :: operator()(int i) const{ //enlever le & après double, ca a ptet tout niqué
+double vecteur :: operator()(int i) const{ 
   if (i>dim_ || i<=0){
     stop_vect("INDICE INCORRECT");
   }

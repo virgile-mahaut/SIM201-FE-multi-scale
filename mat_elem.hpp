@@ -1,8 +1,9 @@
 #ifndef __MAT_ELEM_H__
 #define __MAT_ELEM_H__
+#include "maillage.hpp" 
 
 typedef double (*pf)(double, double);
-matrice_profil_sym k_elem(Point S1,Point S2, Point S3, Maillage& M, pf a);
-matrice_profil_sym m_elem(Point S1,Point S2,Point S3);
+matrice_pleine k_elem(const Point& S1, const Point& S2, const Point& S3, const Maillage& M, pf a);
+matrice_pleine m_elem(const Point& S1, const Point& S2, const Point& S3);
 
 #endif

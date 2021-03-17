@@ -1,15 +1,10 @@
 #include <iostream>
-#include <vector>
-#include <list>
 #include <cmath>
-#include "matrice.hpp"
-#include "vecteur.hpp"
-#include "maillage.hpp"
 #include "mat_elem.hpp"
 using namespace std;
 
 
-matrice_profil_sym k_elem(Point S1,Point S2, Point S3, Maillage& M, pf a){
+matrice_pleine k_elem(const Point& S1,const Point& S2, const Point& S3, const Maillage& M, pf a){
 
     // Pour plus de lisibilité
     double x1 = S1.x;
@@ -90,8 +85,7 @@ matrice_profil_sym k_elem(Point S1,Point S2, Point S3, Maillage& M, pf a){
     double I = w0*a(FP0(1),FP0(2))+w1*a(FP1(1),FP1(2))+w2*a(FP2(1),FP2(2))+w3*a(FP3(1),FP3(2))
     +w4*a(FP4(1),FP4(2))+w5*a(FP5(1),FP5(2))+w6*a(FP6(1),FP6(2));
     // Matrice élémentaire
-    vector<int> profil; profil.resize(3); profil[0]=1; profil[1]=1; profil[2]=1;
-    matrice_profil_sym Kel(3,3,profil);
+    matrice_pleine Kel(3,3);
     vecteur gradi(2); vecteur gradj(2); vecteur vec1(2); vecteur vec2(2);
     for (int i=1; i<=3; i++){
         gradi(1)=gradw(i,1); gradi(2)=gradw(i,2);
@@ -105,7 +99,7 @@ matrice_profil_sym k_elem(Point S1,Point S2, Point S3, Maillage& M, pf a){
 }
 
 
-matrice_profil_sym m_elem(Point S1,Point S2,Point S3){
+matrice_pleine m_elem(const Point& S1,const Point& S2, const Point& S3){
     // Pour plus de lisibilité
     double x1 = S1.x;
     double y1 = S1.y;
@@ -114,8 +108,7 @@ matrice_profil_sym m_elem(Point S1,Point S2,Point S3){
     double x3 = S3.x;
     double y3 = S3.y;
     
-    vector<int> profil; profil.resize(3); profil[0]=1; profil[1]=1; profil[2]=1;
-    matrice_profil_sym Mel(3,3,profil);
+    matrice_pleine Mel(3,3);
     double D = abs((x2-x1)*(y3-y1) - (y2-y1)*(x3-x1));
     if (D<=1e-12) cout<<"Error: triangle area is null.\n";
     for (int i=1; i<=3; i++){
